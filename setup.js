@@ -2,6 +2,7 @@ const canvas = document.querySelector("canvas");
 const lienzo = canvas.getContext('2d'); // 21 width, 13 height
 const GRID_WIDTH = 21;
 const GRID_HEIGHT = 13;
+let lastPress = "ArrowRight";
 let sprites = [];
 
 const srcs = [
@@ -65,12 +66,12 @@ const boardManager = (() => {
             grid = newGrid;
         }
 
-        const getCell = (x, y) => {
-            return grid[x][y];
+        const getCell = (y, x) => {
+            return grid[y][x];
         }
 
-        const setCell = (x, y, value) => {
-            grid[x][y] = value;
+        const setCell = (y, x, value) => {
+            grid[y][x] = value;
         }
 
         const getHeight = () => {
@@ -146,6 +147,76 @@ entities.replaceGrid([
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], //12
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], //13
 ]);
+
+const mover = (state) => ({
+    lastPos: {
+        x: state.pos.x, 
+        y: state.pos.y,
+    },
+
+    changePos: function () {
+        entities.setCell(this.lastPos.y, this.lastPos.x, 0);
+        entities.setCell(state.pos.y, state.pos.x, state.type);
+    },
+
+    changeLastPos: function () {
+        this.lastPos.y = state.pos.y;
+        this.lastPos.x = state.pos.x; 
+    },
+
+    moveUp: function() {if (state.pos.y-1 >= 0) {
+        this.changeLastPos();
+        state.pos.y -= 1;
+    }},
+    moveDown: function() {if (state.pos.y+1 < GRID_HEIGHT) {
+        this.changeLastPos();
+        state.pos.y += 1;
+    }},
+    moveRight: function() {if (state.pos.x+1 < GRID_WIDTH) {
+        this.changeLastPos();
+        state.pos.x += 1;
+    }},
+    moveLeft: function() {if (state.pos.x-1 >= 0) {
+        this.changeLastPos(); 
+        state.pos.x -= 1;
+    }},
+
+    updatePos: function() {
+        if (lastPress == "ArrowUp") {
+            this.moveUp();
+        } else if (lastPress == "ArrowDown") {
+            this.moveDown();
+        } else if (lastPress == "ArrowRight") {
+            this.moveRight();
+        } else if (lastPress == "ArrowLeft") {
+            this.moveLeft();
+        }
+        this.changePos()
+    },
+});
+
+const player = (name, posX, posY) => {
+    let state = {
+        name,
+        speed: 1,
+        pos: {
+            x: posX,
+            y: posY,
+        },
+        type: 1,
+    }
+
+    const controller = () => ({
+
+    });
+
+    return Object.assign(
+        {},
+        state,
+        mover(state),
+        controller(),
+    )
+}
 
 /*
 const img = new Image();
