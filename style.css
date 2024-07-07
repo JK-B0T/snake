@@ -8,7 +8,8 @@
 body {
     display: grid;
     grid-template: 50px 1fr 50px / 1fr;
-    height: 99.5vh;
+    height: 100vh;
+    border: 5px red solid;
 }
 
 #gameContainer {

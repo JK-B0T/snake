@@ -2,39 +2,63 @@ window.addEventListener("DOMContentLoaded", main, false);
 
 function main() {
     const player1 = player("player", 0, 0)
-    console.log(player1);
 
     function act() {
         player1.updatePos();
-        console.log(player1.pos.x, player1.pos.y, "/", player1.headLastPos.x, player1.headLastPos.y);
     }
 
     function paint() {
-        paintTerrain(player1.headLastPos.x, player1.headLastPos.y);
-        paintPlayer();
-        
+        paintTerrain(player1.lastPos.x, player1.lastPos.y);
+        paintPlayerHead();
+        //paintPlayerBody();
+        //paintPlayerTail();
+        //paintEntities();
     }
 
-    function paintPlayer() {
-        if (currentDirection == "ArrowUp") {
-            lienzo.drawImage(colorize(sprites[0],player1.color[0], player1.color[1], player1.color[2]), 24*player1.pos.x, 24*player1.pos.y, 24, 24);
-        } else if (currentDirection == "ArrowRight") {
-            lienzo.drawImage(colorize(sprites[1],player1.color[0], player1.color[1], player1.color[2]), 24*player1.pos.x, 24*player1.pos.y, 24, 24);
-        } else if (currentDirection == "ArrowDown") {
-            lienzo.drawImage(colorize(sprites[2],player1.color[0], player1.color[1], player1.color[2]), 24*player1.pos.x, 24*player1.pos.y, 24, 24);
-        } else if (currentDirection == "ArrowLeft") {
-            lienzo.drawImage(colorize(sprites[3],player1.color[0], player1.color[1], player1.color[2]), 24*player1.pos.x, 24*player1.pos.y, 24, 24);
+    function paintPlayerHead() {
+        if (controllerDirection == "ArrowUp") {
+            lienzo.drawImage(colorize(sprites[0],player1.color[0], player1.color[1], player1.color[2]), 48*player1.pos.x, 48*player1.pos.y, 48, 48);
+        } else if (controllerDirection == "ArrowRight") {
+            lienzo.drawImage(colorize(sprites[1],player1.color[0], player1.color[1], player1.color[2]), 48*player1.pos.x, 48*player1.pos.y, 48, 48);
+        } else if (controllerDirection == "ArrowDown") {
+            lienzo.drawImage(colorize(sprites[2],player1.color[0], player1.color[1], player1.color[2]), 48*player1.pos.x, 48*player1.pos.y, 48, 48);
+        } else if (controllerDirection == "ArrowLeft") {
+            lienzo.drawImage(colorize(sprites[3],player1.color[0], player1.color[1], player1.color[2]), 48*player1.pos.x, 48*player1.pos.y, 48, 48);
+        }
+    }
+
+    function paintPlayerBody() {
+        if (controllerDirection == "ArrowUp") {
+            lienzo.drawImage(colorize(sprites[0],player1.color[0], player1.color[1], player1.color[2]), 48*player1.pos.x, 48*player1.pos.y, 48, 48);
+        } else if (controllerDirection == "ArrowRight") {
+            lienzo.drawImage(colorize(sprites[1],player1.color[0], player1.color[1], player1.color[2]), 48*player1.pos.x, 48*player1.pos.y, 48, 48);
+        } else if (controllerDirection == "ArrowDown") {
+            lienzo.drawImage(colorize(sprites[2],player1.color[0], player1.color[1], player1.color[2]), 48*player1.pos.x, 48*player1.pos.y, 48, 48);
+        } else if (controllerDirection == "ArrowLeft") {
+            lienzo.drawImage(colorize(sprites[3],player1.color[0], player1.color[1], player1.color[2]), 48*player1.pos.x, 48*player1.pos.y, 48, 48);
+        }
+    }
+
+    function paintPlayerTail() {
+        if (controllerDirection == "ArrowUp") {
+            lienzo.drawImage(colorize(sprites[0],player1.color[0], player1.color[1], player1.color[2]), 48*player1.pos.x, 48*player1.pos.y, 48, 48);
+        } else if (controllerDirection == "ArrowRight") {
+            lienzo.drawImage(colorize(sprites[1],player1.color[0], player1.color[1], player1.color[2]), 48*player1.pos.x, 48*player1.pos.y, 48, 48);
+        } else if (controllerDirection == "ArrowDown") {
+            lienzo.drawImage(colorize(sprites[2],player1.color[0], player1.color[1], player1.color[2]), 48*player1.pos.x, 48*player1.pos.y, 48, 48);
+        } else if (controllerDirection == "ArrowLeft") {
+            lienzo.drawImage(colorize(sprites[3],player1.color[0], player1.color[1], player1.color[2]), 48*player1.pos.x, 48*player1.pos.y, 48, 48);
         }
     }
 
     function paintTerrain(x, y) {
         lienzo.imageSmoothingEnabled = false;
         if(terrain.getCell(y, x) === 0) {
-            lienzo.drawImage(sprites[30], 24*x, 24*y, 24, 24);
+            lienzo.drawImage(sprites[30], 48*x, 48*y, 48, 48);
         } else if (terrain.getCell(y, x) === 1) {
-            lienzo.drawImage(sprites[31], 24*x, 24*y, 24, 24);
+            lienzo.drawImage(sprites[31], 48*x, 48*y, 48, 48);
         } else {
-            lienzo.drawImage(sprites[33], 24*x, 24*y, 24, 24);
+            lienzo.drawImage(sprites[33], 48*x, 48*y, 48, 48);
         }
     }
 
@@ -56,16 +80,7 @@ function main() {
                 paintTerrain(x, y);
             }
         }
-
-        document.addEventListener('keydown', function(e) {
-            if ((currentDirection === "ArrowUp" && e.key !== "ArrowDown")
-                || (currentDirection === "ArrowRight" && e.key !== "ArrowLeft")
-                || (currentDirection === "ArrowDown" && e.key !== "ArrowUp")
-                || (currentDirection === "ArrowLeft" && e.key !== "ArrowRight")) {
-                lastDirection = currentDirection;
-                currentDirection = e.key;
-            }
-        }, false);
+        player1.createController();
 
         run();
     }

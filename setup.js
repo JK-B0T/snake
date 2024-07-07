@@ -2,8 +2,7 @@ const canvas = document.querySelector("canvas");
 const lienzo = canvas.getContext('2d'); // 21 width, 13 height
 const GRID_WIDTH = 21;
 const GRID_HEIGHT = 13;
-let lastDirection = "ArrowRight";
-let currentDirection = "ArrowRight";
+let controllerDirection = "ArrowRight";
 let sprites = [];
 
 const srcs = [
@@ -98,6 +97,17 @@ const boardManager = (() => {
             }
         }
 
+        const printGrid = () => {
+            let string = "";
+            for (let x = 0; x < rows; x++) {
+                string += "\n"
+                for (let y = 0; y < columns; y++) {
+                    string += grid[x][y];
+                }
+            }
+            console.log(string);
+        }
+
         const replaceGrid = (newGrid) => {
             grid = newGrid;
         }
@@ -118,7 +128,7 @@ const boardManager = (() => {
             return columns;
         }
 
-        gridList[name] = {getCell, setCell, fillGrid, replaceGrid, getHeight, getWidth};
+        gridList[name] = {getCell, setCell, fillGrid, replaceGrid, getHeight, getWidth, printGrid};
     }
 
     const getGrid = (name) => {
@@ -184,168 +194,146 @@ entities.replaceGrid([
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], //13
 ]);
 
-const mover = (state) => ({
-    headLastPos: {
-        x: state.pos.x, 
-        y: state.pos.y,
+const mover = (state, posX, posY) => ({
+    pos: {
+        x: posX,
+        y: posY,
     },
 
-    tailLastPos: {
-        x: state.pos.x, 
-        y: state.pos.y,
+    lastPos: {
+        x: posX, 
+        y: posY,
     },
 
     changePos: function () {
-        entities.setCell(this.headLastPos.y, this.headLastPos.x, 0);
-        entities.setCell(state.pos.y, state.pos.x, state.type);
+        entities.setCell(this.lastPos.y, this.lastPos.x, 0);
+        entities.setCell(this.pos.y, this.pos.x, state.type);
     },
 
     changeLastPos: function () {
-        this.headLastPos.y = state.pos.y;
-        this.headLastPos.x = state.pos.x; 
+        this.lastPos.y = this.pos.y;
+        this.lastPos.x = this.pos.x; 
     },
 
-    moveUp: function() {if (state.pos.y-1 >= 0) {
+    moveUp: function() {if (this.pos.y-1 >= 0) {
+        this.pos.y -= 1;
+    }},
+    moveDown: function() {if (this.pos.y+1 < GRID_HEIGHT) {
+        this.pos.y += 1;
+    }},
+    moveRight: function() {if (this.pos.x+1 < GRID_WIDTH) {
+        this.pos.x += 1;
+    }},
+    moveLeft: function() {if (this.pos.x-1 >= 0) {
+        this.pos.x -= 1;
+    }},
+});
+
+const playerMover = (state, posX, posY) => ({
+
+    pos: {
+        x: posX,
+        y: posY,
+    },
+
+    lastPos: {
+        x: posX - state.snake.length, 
+        y: posY,
+    },
+
+    changePos: function () {
+        entities.setCell(this.lastPos.y, this.lastPos.x, 0);
+        entities.setCell(this.pos.y, this.pos.x, state.type);
+    },
+
+    changeLastPos: function () {
+        if (entities.getCell(this.lastPos.y, this.lastPos.x) !== 4) {
+            if(this.snake[0] === "u") {
+                this.lastPos.y -= 1;
+                this.snake.shift();
+            } else if (this.snake[0] === "d") {
+                this.lastPos.y += 1;
+                this.snake.shift();
+            } else if (this.snake[0] === "r") {
+                this.lastPos.x += 1;
+                this.snake.shift();
+            } else if (this.snake[0] === "l") {
+                this.lastPos.x -= 1;
+                this.snake.shift();
+            }
+        }
+    },
+
+    moveUp: function() {if (this.pos.y-1 >= 0) {
+        this.pos.y -= 1;
+        this.snake.push("u");
         this.changeLastPos();
-        state.pos.y -= 1;
     }},
-    moveDown: function() {if (state.pos.y+1 < GRID_HEIGHT) {
+    moveDown: function() {if (this.pos.y+1 < GRID_HEIGHT) {
+        this.pos.y += 1;
+        this.snake.push("d");
         this.changeLastPos();
-        state.pos.y += 1;
     }},
-    moveRight: function() {if (state.pos.x+1 < GRID_WIDTH) {
+    moveRight: function() {if (this.pos.x+1 < GRID_WIDTH) {
+        this.pos.x += 1;
+        this.snake.push("r");
         this.changeLastPos();
-        state.pos.x += 1;
     }},
-    moveLeft: function() {if (state.pos.x-1 >= 0) {
-        this.changeLastPos(); 
-        state.pos.x -= 1;
+    moveLeft: function() {if (this.pos.x-1 >= 0) {
+        this.pos.x -= 1;
+        this.snake.push("l");
+        this.changeLastPos();
     }},
+
+    createController: function() {
+        const self = this;
+        document.addEventListener('keydown', function(e) {
+            const headDirection = self.snake[self.snake.length-1];
+            if ((e.key === "ArrowDown" || e.key === "ArrowLeft" || e.key === "ArrowUp" || e.key === "ArrowRight") 
+                && ((headDirection === "u" && e.key !== "ArrowDown")
+                || (headDirection === "r" && e.key !== "ArrowLeft")
+                || (headDirection === "d" && e.key !== "ArrowUp")
+                || (headDirection === "l" && e.key !== "ArrowRight"))) {
+                controllerDirection = e.key;
+            }
+        }, false);
+    },
 
     updatePos: function() {
-        if (currentDirection == "ArrowUp") {
+        entities.printGrid();
+        console.log(this.snake);
+
+        if (controllerDirection == "ArrowUp") {
             this.moveUp();
-        } else if (currentDirection == "ArrowDown") {
+        } else if (controllerDirection == "ArrowDown") {
             this.moveDown();
-        } else if (currentDirection == "ArrowRight") {
+        } else if (controllerDirection == "ArrowRight") {
             this.moveRight();
-        } else if (currentDirection == "ArrowLeft") {
+        } else if (controllerDirection == "ArrowLeft") { 
             this.moveLeft();
-        }
-        this.changePos()
+        }        
+        this.changePos();
     },
-});
-
-const elongable = (state) => ({
-    elongate: function() {
-        let bodyType = 3;
-
-        if (state.length === 2) {
-            bodyType = 2;
-        } else if (!state.hasEaten) {
-            bodyType = 4;
-        } else {
-            bodyType = 3;
-        }
-
-        //Simplify
-        if (lastDirection == "ArrowUp") {
-            if (currentDirection == "ArrowUp") {
-                entities.setCell(state.pos.y++,state.pos.x, bodyType);
-            } else if (currentDirection == "ArrowRight") {
-                entities.setCell(state.pos.y ,state.pos.x-- , bodyType);
-            } else {
-                entities.setCell(state.pos.y ,state.pos.x++, bodyType);
-            }
-        } else if (lastDirection == "ArrowDown") {
-            if (currentDirection == "ArrowDown") {
-                entities.setCell(state.pos.y-- ,state.pos.x, bodyType);
-            } else if (currentDirection == "ArrowRight") {
-                entities.setCell(state.pos.y ,state.pos.x--, bodyType);
-            } else {
-                entities.setCell(state.pos.y ,state.pos.x++, bodyType);
-            }
-        } else if (lastDirection == "ArrowRight") {
-            if (currentDirection == "ArrowRight") {
-                entities.setCell(state.pos.y ,state.pos.x--, bodyType);
-            } else if (currentDirection == "ArrowUp") {
-                entities.setCell(state.pos.y++ ,state.pos.x , bodyType);
-            } else {
-                entities.setCell(state.pos.y-- ,state.pos.x, bodyType);
-            }
-        } else if (lastDirection == "ArrowLeft") {
-            if (currentDirection == "ArrowLeft") {
-                entities.setCell(state.pos.y ,state.pos.x++, bodyType);
-            } else if (currentDirection == "ArrowUp") {
-                entities.setCell(state.pos.y++ ,state.pos.x , bodyType);
-            } else {
-                entities.setCell(state.pos.y-- ,state.pos.x, bodyType);
-            }
-        }
-    }
-});
-
-const shortable = (state) => ({
-    shorten: function() {
-        if (currentDirection == "ArrowUp") {
-        
-        } else if (currentDirection == "ArrowDown") {
-            
-        } else if (currentDirection == "ArrowRight") {
-            
-        } else if (currentDirection == "ArrowLeft") {
-            
-        }
-    }
 });
 
 const player = (name, posX, posY) => {
     let state = {
         name,
         speed: 1,
-        pos: {
-            x: posX,
-            y: posY,
-        },
         type: 1,
         color: [0.85, 1, 0],
-        length: 2,
         hasEaten: false,
+        snake: ["r","r"],
     }
 
     return Object.assign(
         {},
         state,
-        mover(state),
-        elongable(state),
-        shortable(state),
+        playerMover(state, posX, posY),
     )
 }
 
-/*const playerPiece = (name, posX, posY) => {
-    let state = {
-        name,e
-        speed: 1,
-        pos: {
-            x: posX,
-            y: posY,
-        },
-        type: 1,
-    }
-
-    const controller = () => ({
-
-    });
-
-    return Object.assign(
-        {},
-        state,
-        mover(state),
-        controller(),
-    )
-}*/
-
-/*
+/* ---Ejemplo de pintar imagen---
 const img = new Image();
 img.src = "./sprites/sHead.png";
 console.log(img)
